@@ -1,0 +1,19 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+langchain = "*"
+python-dotenv = "*"
+chromadb = "*"
+transformers = "*"
+requests = "*"
+langchain-chroma = "*"
+schedule = "*"
+langchain-community = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.12"
