@@ -1,13 +1,13 @@
 from dotenv import load_dotenv
 import os 
 
-from langchain import LLMChain, PromptTemplate
 from langchain_core.prompts import PromptTemplate
+from langchain_huggingface.llms import HuggingFacePipeline
 
 from agents.jira_task_agent import JiraTaskAgent
 
 class PersonalAssistant:
-    def __init__(self, llm, user_email):
+    def __init__(self, llm: HuggingFacePipeline, user_email):
         load_dotenv()
         self.llm = llm
 
@@ -15,17 +15,9 @@ class PersonalAssistant:
         self.jira_task_agent = JiraTaskAgent(os.environ['JIRA_URL'], os.environ['JIRA_TOKEN'], user_email)
 
     def test_prompt(self):
-        template = """
-        Write me a poem about {topic}.
-        """
-        topic = "Machine Learning"
-
-        prompt = PromptTemplate(input_variables=["topic"], template=template)
-
-        chain = prompt | self.llm
-
-        output = chain.invoke({"topic": topic})
-        print(output)
+        text = "This is a great movie!"
+        result = self.llm.invoke(text)
+        print(result)
 
     def run(self):
         print("assitant running")

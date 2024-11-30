@@ -1,7 +1,7 @@
 from dotenv import load_dotenv
 import os 
-from langchain import LLMChain, PromptTemplate
-from langchain.llms import HuggingFacePipeline
+from langchain_huggingface.llms import HuggingFacePipeline
+from transformers import BertModel, AutoTokenizer, TextClassificationPipeline
 #from langchain_chroma import Chroma
 import schedule
 import time
@@ -9,10 +9,9 @@ from assistant import PersonalAssistant
 
 def init():
     load_dotenv()
-    print(os.environ['HF_TOKEN'])
     
     # Initialize the language model
-    llm = HuggingFacePipeline(model_name=os.environ['MODEL_NAME'], model_path=os.environ['MODEL_PATH'])
+    llm = get_huggingface_pipeline()
 
     # Initialize the knowledge base
     #knowledge_base = KnowledgeBaseChain(api_key='your_knowledge_base_api_key', db=chroma_db)
@@ -33,6 +32,29 @@ def init():
         # Sleep for a short time to avoid high CPU usage
         time.sleep(1)
 
+def get_bert_model():
+    model_id = "bert-base-uncased"
+    model_path = "./llm/bert"
+    
+    try:
+        tokenizer = AutoTokenizer.from_pretrained(model_path)
+    except:
+        tokenizer = AutoTokenizer.from_pretrained(model_id)
+        tokenizer.save_pretrained(model_path)
+    
+    try:
+        model = BertModel.from_pretrained(model_path)
+    except:
+        model = BertModel.from_pretrained(model_id)
+        model.save_pretrained(model_path)
+
+    return tokenizer, model
+
+
+def get_huggingface_pipeline():
+    tokenizer, model = get_bert_model()
+    pipe = TextClassificationPipeline(model=model, tokenizer=tokenizer)
+    return HuggingFacePipeline(pipeline=pipe)
 
 if __name__ == "__main__":
     init()
