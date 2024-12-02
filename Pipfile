@@ -12,7 +12,7 @@ requests = "*"
 langchain-chroma = "*"
 schedule = "*"
 langchain-community = "*"
-langchain-huggingface = "*"
+chroma = "*"
 
 [dev-packages]
 

@@ -1,18 +1,17 @@
 from dotenv import load_dotenv
 import os 
-from langchain_huggingface.llms import HuggingFacePipeline
-from transformers import BertModel, AutoTokenizer, TextClassificationPipeline
-#from langchain_chroma import Chroma
 import schedule
 import time
+
+from transformers import AutoTokenizer, TextClassificationPipeline, AutoModelForCausalLM, pipeline
+from langchain_huggingface import HuggingFacePipeline, HuggingFaceEmbeddings
+from langchain_chroma import Chroma
+
 from assistant import PersonalAssistant
 
 def init():
     load_dotenv()
     
-    # Initialize the language model
-    llm = get_huggingface_pipeline()
-
     # Initialize the knowledge base
     #knowledge_base = KnowledgeBaseChain(api_key='your_knowledge_base_api_key', db=chroma_db)
     #vector_store = Chroma(
@@ -21,7 +20,7 @@ def init():
     #    persist_directory="./chroma_langchain_db"
     #)
 
-    personal_assistant = PersonalAssistant(llm, "manuel_ditzig@trimble.com")
+    personal_assistant = PersonalAssistant(get_text_generation_pipeline(), get_text_classification_pipeline(), get_vectorstore(), "manuel_ditzig@trimble.com")
     
     # Schedule the method to run every minute
     schedule.every(1).minute.do(personal_assistant.run())
@@ -32,9 +31,29 @@ def init():
         # Sleep for a short time to avoid high CPU usage
         time.sleep(1)
 
-def get_bert_model():
-    model_id = "bert-base-uncased"
-    model_path = "./llm/bert"
+def get_vectorstore():
+    # TODO get more meaningful documents, like load them from notion pages or something
+    documents = [
+        {"id": "1", "text": "Tasks related to the stability of the application 'Transport Assignment' are always TOP priority."},
+        {"id": "2", "text": "."}
+    ]
+
+    model_id = "all-MiniLM-L6-v2"
+    model_path = "./llm/" + model_id
+    try:
+        embeddings = HuggingFaceEmbeddings(model_name=model_path)
+    except:
+        embeddings = HuggingFaceEmbeddings(model_name=model_id)
+        # embeddings(model_path) -> save
+
+    return Chroma.from_documents(
+        documents,
+        embedding=embeddings,
+        persist_directory="./vectorstore"
+    )
+
+def get_model(model_id):
+    model_path = "./llm/" + model_id
     
     try:
         tokenizer = AutoTokenizer.from_pretrained(model_path)
@@ -43,17 +62,21 @@ def get_bert_model():
         tokenizer.save_pretrained(model_path)
     
     try:
-        model = BertModel.from_pretrained(model_path)
+        model = AutoModelForCausalLM.from_pretrained(model_path)
     except:
-        model = BertModel.from_pretrained(model_id)
+        model = AutoModelForCausalLM.from_pretrained(model_id)
         model.save_pretrained(model_path)
 
     return tokenizer, model
 
-
-def get_huggingface_pipeline():
-    tokenizer, model = get_bert_model()
+def get_text_classification_pipeline():
+    tokenizer, model = get_model("bert-base-uncased")
     pipe = TextClassificationPipeline(model=model, tokenizer=tokenizer)
+    return HuggingFacePipeline(pipeline=pipe)
+
+def get_text_generation_pipeline():
+    tokenizer, model = get_model("gpt2")
+    pipe = pipeline("text-generation", model=model, tokenizer=tokenizer)
     return HuggingFacePipeline(pipeline=pipe)
 
 if __name__ == "__main__":
