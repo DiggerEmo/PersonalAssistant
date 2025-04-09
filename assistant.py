@@ -1,5 +1,6 @@
 from dotenv import load_dotenv
 import os 
+from categories import Category 
 
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_huggingface.llms import HuggingFacePipeline
@@ -7,6 +8,7 @@ from langchain_chroma import Chroma
 
 from agents.jira_task_agent import JiraTaskAgent
 from agents.information_agent import InformationAgent
+from agents.task_manager_agent import TaskManagerAgent
 
 class PersonalAssistant:
     def __init__(self, generate_llm: HuggingFacePipeline, classification_llm: HuggingFacePipeline, vectorstore: Chroma, user_email):
@@ -16,34 +18,30 @@ class PersonalAssistant:
 
         # Setup agents
         self.information_agent = InformationAgent(classification_llm, vectorstore)
-        self.jira_task_agent = JiraTaskAgent(os.environ['JIRA_URL'], os.environ['JIRA_TOKEN'], user_email)
+        self.task_manager_agent = TaskManagerAgent(generate_llm, vectorstore)
+        #self.jira_task_agent = JiraTaskAgent(os.environ['JIRA_URL'], os.environ['JIRA_TOKEN'], user_email)
 
-    def test_prompt(self):
-        prompt_template = ChatPromptTemplate.from_messages(
-            [
-                ("system", "You are soto zen master Roshi."),
-                ("human", "What is the essence of Zen?"),
-                ("ai", "When you are hungry, eat. When you are tired, sleep."),
-                ("human", "Respond to the question: {question}")
-            ]
-        )
-        
-        llm_chain = prompt_template | self.generate_llm
-        result = llm_chain.invoke({"question": "What is the meaning of life?"})
-        print(result)
+    def add_task(self, task: str):
+        self.task_manager_agent.create_task(task)
 
-    def run(self):
-        print("assitant running")
-        #self.test_prompt()
-        self.information_agent.get_info("What application is most important for my work?")
+    def add_task(self, task: str):
+        self.task_manager_agent.complete_task(task)
 
-        # Fetch and prioritize Jira tasks
-       # active_cards = self.jira_task_agent.get_active_cards()
-       # prioritized_cards = self.jira_task_agent.analyze_and_prioritize_cards(active_cards)
-       # print("Prioritized Jira Cards:", prioritized_cards)
+    def take_input(self, input: str):
+        # Categorize the input into a known category
+        category = self.categorize(input)
 
-        # Set reminders for upcoming tasks
-       # for card in prioritized_cards:
-       #     self.reminder_agent.set_reminder(card['fields']['summary'])
+        if category == Category.TASK: 
+            self.task_manager_agent.create_task(input)
+        if category == Category.KNOWLEDGE:
+            self.information_agent.add_info(input)
+        if category == Category.QUESTION: 
+            self.task_manager_agent.ask_question(input)        
 
-        # Check emails
+    def categorize(self, input: str):
+        self.classification_llm.invoke(input)
+
+        return Category.TASK
+
+    def get_next_task(self):
+        print(self.task_manager_agent.get_next_task(input))

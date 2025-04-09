@@ -13,8 +13,10 @@ langchain-chroma = "*"
 schedule = "*"
 langchain-community = "*"
 chroma = "*"
+evaluate = "*"
+accelerate = ">=0.26.0"
 
 [dev-packages]
 
 [requires]
-python_version = "3.12"
+python_version = "3.13"

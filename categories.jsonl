@@ -1,0 +1,6 @@
+{"instruction":"What category does the input fit?", "output": 0, "input": "Create documentation for the feature: Improve UI for TA"}
+{"instruction":"What category does the input fit?", "output": 1, "input": "TA is a very crucial application for our business and it is always the number one priority that it stays stable"}
+{"instruction":"What category does the input fit?", "output": 1, "input": "TA means Transport Assignement and it is an application at transporeon"}
+{"instruction":"What category does the input fit?", "output": 1, "input": "T5 is short for T5web and is a backend application important for TA, SAP-Addon and some other application in transporeon"}
+{"instruction":"What category does the input fit?", "output": 1, "input": "TAsupport is a backend spring boot application that mainly supplies TA with masterdata"}
+{"instruction":"What category does the input fit?", "output": 2, "input": "What is GenAI?"}
